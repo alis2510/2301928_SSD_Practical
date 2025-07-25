@@ -19,7 +19,7 @@ jobs:
         with:
           php-version: '8.1'
 
-      - name: Start PHP built-in server
+      - name: Start PHP built-in server in background
         run: nohup php -S localhost:8000 -t . > /dev/null 2>&1 &
 
       - name: Wait for server to be ready
@@ -38,7 +38,7 @@ jobs:
           project: "Secure WebApp"
           path: "."
 
-      - name: Upload Dependency Check report
+      - name: Upload Dependency Check Report
         uses: actions/upload-artifact@v3
         with:
           name: dependency-check-report
