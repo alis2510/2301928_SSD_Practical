@@ -1,0 +1,58 @@
+name: Secure WebApp CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+
+      - name: Start PHP built-in server
+        run: php -S localhost:8000 -t . &
+
+      - name: Wait for server to be ready
+        run: sleep 5
+
+      - name: UI Test - Check Homepage Content
+        run: |
+          curl -s --fail http://localhost:8000 | grep "Search" || exit 1
+
+      - name: Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: "Secure WebApp"
+          path: "."
+
+      - name: Upload Dependency Check report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: dependency-check-report
+
+      - name: Set up Node.js (for ESLint)
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install ESLint & Security Plugin
+        run: |
+          npm install eslint eslint-plugin-security --save-dev
+          echo '{
+            "plugins": ["security"],
+            "extends": ["plugin:security/recommended"]
+          }' > .eslintrc.json
+
+      - name: Run ESLint Security Scan
+        run: npx eslint . --ext .js || true
