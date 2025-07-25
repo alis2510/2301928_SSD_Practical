@@ -19,24 +19,25 @@ jobs:
         with:
           php-version: '8.1'
 
-      - name: Start PHP built-in server in background
-        run: nohup php -S localhost:8000 -t . > /dev/null 2>&1 &
+      - name: Start PHP server from ./php
+        working-directory: ./php
+        run: nohup php -S 127.0.0.1:8000 > /dev/null 2>&1 &
 
       - name: Wait for server to be ready
         run: |
           for i in {1..10}; do
-            curl -s http://localhost:8000 && break || sleep 3
+            curl -s http://127.0.0.1:8000 && break || sleep 3
           done
 
       - name: UI Test - Check Homepage Content
         run: |
-          curl -s --fail http://localhost:8000 | grep "Search" || exit 1
+          curl -s --fail http://127.0.0.1:8000 | grep "Search" || exit 1
 
       - name: Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: "Secure WebApp"
-          path: "."
+          path: "./php"
 
       - name: Upload Dependency Check Report
         uses: actions/upload-artifact@v3
@@ -50,6 +51,7 @@ jobs:
           node-version: '18'
 
       - name: Install ESLint & Security Plugin
+        working-directory: ./php
         run: |
           npm install eslint eslint-plugin-security --save-dev
           echo '{
@@ -58,4 +60,5 @@ jobs:
           }' > .eslintrc.json
 
       - name: Run ESLint Security Scan
+        working-directory: ./php
         run: npx eslint . --ext .js || true
